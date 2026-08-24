@@ -1,0 +1,17 @@
+Package: bharatPII
+Title: Indian PII Detection and DPDP Compliance Auditing
+Version: 0.0.0.9000
+Authors@R:
+    c(
+      person("Vaisnavi", "Sabarish", , "vaisnavisabarish2@gmail.com",
+             role = c("aut", "cre")),
+      person("ADARSH", "SPL", , "adarshds1224@gmail.com",
+             role = "aut")
+    )
+Description: Detects Indian personally identifiable information, assesses
+    re-identification risk, supports DPDP Act 2023 compliance auditing, and
+    provides anonymization utilities for R data workflows.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 8.1.0

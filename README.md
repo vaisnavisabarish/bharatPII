@@ -6,8 +6,6 @@
 
 The package focuses on Indian identifiers such as **Aadhaar, PAN, GSTIN, IFSC, UPI VPA, mobile numbers, and PIN codes**. Instead of relying only on loose regular-expression matching, bharatPII combines pattern detection with structural and checksum-based validation where applicable.
 
-The project was developed as part of **Programming for Data Science at VIT Chennai**.
-
 ---
 
 ## Why bharatPII?

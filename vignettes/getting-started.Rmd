@@ -1,0 +1,120 @@
+---
+title: "Getting Started with bharatpii"
+author: "bharatpii contributors"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with bharatpii}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Introduction
+
+`bharatpii` provides tools for detecting Indian identifiers in data,
+performing structural validity checks, scanning data frames for potential
+personal information, and producing technical privacy-audit results.
+
+Identifier validation checks structure and applicable checksums. It does
+not establish that an identifier was issued or belongs to a particular person.
+
+This vignette uses synthetic data only.
+
+# Installation
+
+Install the development version from the project's GitHub repository:
+
+```{r install, eval=FALSE}
+install.packages("devtools")
+devtools::install_github("adarshds1224-pixel/bharatPII")
+```
+
+Load the package:
+
+```{r load-package}
+library(bharatpii)
+```
+
+# Generate example data
+
+Use the package's synthetic-data generator rather than real personal data.
+
+```{r synthetic-data}
+set.seed(123)
+example_data <- synthetic_pii(n = 10)
+
+names(example_data)
+head(example_data)
+```
+
+The generated data includes example Indian identifier fields and other
+synthetic attributes. Do not interpret these records as real identities.
+
+# Detect individual identifiers
+
+Detector functions return structured results containing the input value,
+a structural-validity result, and a confidence measure.
+
+For example, inspect Aadhaar-shaped values:
+
+```{r aadhaar-detection}
+aadhaar_results <- detect_aadhaar(example_data$aadhaar_no)
+head(aadhaar_results)
+```
+
+Inspect PAN-shaped values:
+
+```{r pan-detection}
+pan_results <- detect_pan(example_data$pan_no)
+head(pan_results)
+```
+
+Inspect mobile-number-shaped values:
+
+```{r mobile-detection}
+mobile_results <- detect_mobile(example_data$mobile)
+head(mobile_results)
+```
+
+A structural result should not be treated as proof of issuance, ownership,
+or legal status.
+
+# Scan a data frame
+
+`pii_scan()` applies the package's detector registry to a data frame and
+returns a column-level audit object.
+
+```{r scan-data}
+audit <- pii_scan(example_data, threshold = 0.5)
+
+print(audit)
+summary(audit)
+```
+
+Inspect the column-level findings:
+
+```{r audit-columns}
+audit_table <- as.data.frame(audit)
+head(audit_table)
+```
+
+The threshold controls the detector hit-rate threshold used when flagging
+columns. Review the returned evidence before making decisions about the data.
+
+# Next steps
+
+After scanning, you can use `classify_dpdp()` to add the package's
+DPDP-informed technical classifications, `reid_risk()` to assess
+k-anonymity-related risk, and `dpdp_score()` to calculate a technical
+summary score.
+
+These outputs are analytical aids. They do not certify compliance with
+India's Digital Personal Data Protection Act, 2023.

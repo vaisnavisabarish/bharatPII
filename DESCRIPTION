@@ -1,20 +1,40 @@
-Package: bharatPII
-Title: Indian PII Detection and DPDP Compliance Auditing
-Version: 0.0.0.9000
-Authors@R:
-    c(
-      person("Vaisnavi", "Sabarish", , "vaisnavisabarish2@gmail.com",
-             role = c("aut", "cre")),
-      person("ADARSH", "SPL", , "adarshds1224@gmail.com",
-             role = "aut")
-    )
-Description: Detects Indian personally identifiable information, assesses
-    re-identification risk, supports DPDP Act 2023 compliance auditing, and
-    provides anonymization utilities for R data workflows.
+Package: bharatpii
+Title: Indian Identifier Detection and Privacy Auditing
+Version: 0.1.0
+Authors@R: c(
+    person("Adarsh", "S P L",
+           email = "adarshds1224@gmail.com",
+           role = c("aut", "cre")),
+    person("Vaisnavi", "Sabarish",
+           email = "vaisnavisabarish2@gmail.com",
+           role = "aut")
+  )
+Author: Adarsh S P L [aut, cre], Vaisnavi Sabarish [aut]
+Maintainer: Adarsh S P L <adarshds1224@gmail.com>
+Description: Detects and structurally validates Indian personal
+    identifiers in data frames, including Aadhaar (Verhoeff checksum), PAN,
+    GSTIN, IFSC, UPI virtual payment addresses, mobile numbers, postal PIN
+    codes and Voter ID (EPIC). Supports k-anonymity re-identification risk
+    assessment, masking, salted hashing and generalisation of flagged
+    columns, and technical audit reports informed by India's Digital
+    Personal Data Protection (DPDP) Act, 2023. Validity checks do not
+    prove that an identifier was ever issued.
 License: MIT + file LICENSE
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
+URL: https://github.com/vaisnavisabarish/bharatPII
+BugReports: https://github.com/vaisnavisabarish/bharatPII/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    cli,
+    digest
 Suggests:
+    knitr,
+    rmarkdown,
+    spelling,
     testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.1.0

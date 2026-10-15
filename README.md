@@ -1,509 +1,142 @@
-# bharatPII
 
-### Indian PII Detection & DPDP Act 2023 Compliance Auditor
+<!-- README.md is generated from README.Rmd. Please edit README.Rmd. -->
 
-**bharatPII** is an R package designed to detect Indian Personally Identifiable Information (PII) inside datasets and provide a practical privacy-auditing workflow directly within the R/data-science ecosystem.
+# bharatpii
 
-The package focuses on Indian identifiers such as **Aadhaar, PAN, GSTIN, IFSC, UPI VPA, mobile numbers, and PIN codes**. Instead of relying only on loose regular-expression matching, bharatPII combines pattern detection with structural and checksum-based validation where applicable.
+<!-- badges: start -->
 
----
+[![R-CMD-check](https://github.com/adarshds1224-pixel/BharatPII/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/adarshds1224-pixel/BharatPII/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
 
-## Why bharatPII?
+`bharatpii` detects and structurally validates Indian personal
+identifiers in data frames (Aadhaar, PAN, GSTIN, IFSC, UPI VPA, mobile
+numbers, PIN codes and Voter ID), estimates k-anonymity
+re-identification risk, computes a technical readiness score informed by
+India’s Digital Personal Data Protection (DPDP) Act, 2023, and
+anonymises flagged columns.
 
-Data used in academic projects, research, analytics, and machine-learning workflows can easily contain personal information.
-
-Existing privacy and data-quality tools are mostly designed around generic identifiers or non-Indian contexts. This creates a gap for Indian datasets containing identifiers such as Aadhaar, PAN, GSTIN, and UPI IDs.
-
-bharatPII aims to provide a simple R-native workflow:
-
-```text
-Dataset
-   ↓
-PII Detection
-   ↓
-Identifier Validation
-   ↓
-DPDP Classification
-   ↓
-Risk Assessment
-   ↓
-Anonymization
-   ↓
-Compliance Report
-```
-
-The project was specifically designed around the Indian context rather than simply combining existing generic data-quality packages. The CRAN overlap analysis found no existing package reaching the project's 60% conceptual-overlap threshold.
-
----
-
-## Key Features
-
-### 1. Indian PII Detection
-
-bharatPII can scan dataframe columns for several Indian identifier formats:
-
-* Aadhaar
-* PAN
-* GSTIN
-* IFSC
-* UPI VPA
-* Indian mobile numbers
-* Indian PIN codes
-
-The current package architecture assigns a dedicated detector to each identifier type.
-
-### 2. Validation Beyond Regex
-
-The package attempts to distinguish genuine identifier patterns from random strings.
-
-For example, Aadhaar detection incorporates the **Verhoeff checksum algorithm**, while PAN and GSTIN use structural validation rules.
-
-This reduces the number of false positives compared with simple pattern matching.
-
-### 3. DPDP Classification
-
-Detected fields can be classified into privacy-related categories such as:
-
-* Personal Data
-* Sensitive Personal Data
-* Quasi-identifiers
-* Non-personal data
-
-The classification layer is implemented through `classify_dpdp()`.
-
-> **Note:** The compliance functionality is intended as a technical auditing aid and does not constitute legal certification or legal advice.
-
-### 4. DPDP Readiness Score
-
-`dpdp_score()` produces a simple **0–100 score** based on detected categories.
-
-This gives users a quick way to understand how much potentially sensitive information exists in a dataset and which columns contribute to the score.
-
-### 5. Re-identification Risk
-
-Not all privacy risks come from obvious identifiers.
-
-A combination such as:
-
-```text
-PIN Code + Date of Birth + Gender
-```
-
-can potentially make an individual easier to identify.
-
-bharatPII uses a **k-anonymity-based approach** through `reid_risk()` to estimate this type of risk.
-
-### 6. Data Anonymization
-
-Flagged columns can be transformed using:
-
-* Masking
-* Salted SHA-256 hashing
-* Generalization
-
-For example:
-
-```text
-Date of Birth → Age Band
-PIN Code      → Postal Region
-Identifier    → Masked/Hashed Value
-```
-
-The `anonymize()` function provides these transformations as part of the workflow.
-
-### 7. Audit Reporting
-
-The package is designed to generate an audit report containing detected PII, classification results, risk information, and compliance-related findings.
-
-The reporting layer is designed around **R Markdown**, allowing the results to be exported into shareable HTML/PDF reports.
-
----
-
-## Example Workflow
-
-```r
-library(bharatPII)
-
-# Scan a dataframe
-audit <- pii_scan(employee_df)
-
-# Classify detected information
-audit <- classify_dpdp(audit)
-
-# View the audit
-print(audit)
-
-# Calculate DPDP readiness score
-score <- dpdp_score(audit)
-
-score$score
-
-# Estimate re-identification risk
-risk <- reid_risk(
-  employee_df,
-  quasi_vars = c("pincode", "dob", "gender")
-)
-
-risk$min_k
-
-# Anonymize selected columns
-clean_df <- anonymize(
-  employee_df,
-  method = c(
-    aadhaar_no = "mask",
-    dob = "generalize"
-  )
-)
-```
-
-The overall workflow follows the package design described in the project build guide.
-
----
-
-## Example Output
-
-A typical audit can identify columns such as:
-
-```text
-Column        Detected Type       Category
-------------------------------------------------
-aadhaar_no    Aadhaar             Sensitive Personal Data
-pan_no        PAN                 Personal Data
-salary        None                Non-personal
-```
-
-The project proposal demonstrates this type of output together with a compliance score and k-anonymity-based risk assessment.
-
----
-
-## Package Architecture
-
-```text
-bharatPII/
-│
-├── DESCRIPTION
-├── NAMESPACE
-├── LICENSE
-├── README.md
-├── README.Rmd
-│
-├── R/
-│   ├── detect_aadhaar.R
-│   ├── detect_pan.R
-│   ├── detect_gstin.R
-│   ├── detect_ifsc.R
-│   ├── detect_upi.R
-│   ├── detect_mobile.R
-│   ├── detect_pincode.R
-│   ├── pii_scan.R
-│   ├── classify_dpdp.R
-│   ├── dpdp_score.R
-│   ├── reid_risk.R
-│   ├── anonymize.R
-│   ├── report.R
-│   ├── print.pii_audit.R
-│   └── utils.R
-│
-├── tests/
-│   └── testthat/
-│
-├── vignettes/
-│   ├── getting-started.Rmd
-│   └── dpdp-compliance-workflow.Rmd
-│
-└── man/
-```
-
-The package structure follows the standard R package development workflow using `usethis`, `roxygen2`, and `testthat`.
-
----
-
-## Main Functions
-
-| Function           | Purpose                                            |
-| ------------------ | -------------------------------------------------- |
-| `pii_scan()`       | Scans a dataframe for Indian PII                   |
-| `detect_aadhaar()` | Detects and validates Aadhaar patterns             |
-| `detect_pan()`     | Detects structurally valid PAN formats             |
-| `detect_gstin()`   | Detects GSTIN patterns                             |
-| `detect_ifsc()`    | Detects IFSC codes                                 |
-| `detect_upi()`     | Detects UPI VPAs                                   |
-| `detect_mobile()`  | Detects Indian mobile numbers                      |
-| `detect_pincode()` | Detects Indian PIN codes                           |
-| `classify_dpdp()`  | Classifies detected information                    |
-| `dpdp_score()`     | Calculates a 0–100 privacy-readiness score         |
-| `reid_risk()`      | Estimates re-identification risk using k-anonymity |
-| `anonymize()`      | Masks, hashes, or generalizes sensitive data       |
-| `report()`         | Generates an audit report                          |
-
----
+**Important limits.** A valid result means the value is structurally
+valid (format and, where one exists, checksum). It does not prove that
+an identifier was issued or belongs to anyone. The DPDP Act, 2023
+defines “personal data” (Section 2(t)) and has no statutory category of
+“sensitive personal data”, so the `risk_tier` labels and the score are
+package-defined technical conventions. They are not legal advice or a
+certification of compliance.
 
 ## Installation
 
-### Development Version
-
-Clone the repository and open the project in RStudio.
-
-Then install the development dependencies:
-
-```r
-install.packages(c(
-  "devtools",
-  "usethis",
-  "roxygen2",
-  "testthat",
-  "digest",
-  "stringr",
-  "knitr",
-  "rmarkdown"
-))
+``` r
+# install.packages("devtools")
+devtools::install_github("adarshds1224-pixel/bharatPII")
 ```
 
-Load the package during development:
+## Example
 
-```r
-devtools::load_all()
+All data below is synthetic.
+
+``` r
+library(bharatpii)
+
+set.seed(1)
+df <- synthetic_pii(500)
+
+audit <- pii_scan(df)
+audit
+#> <pii_audit>: 9 columns scanned over 500 rows, 5 flagged (threshold 0.50)
+#>      Column      Detected HitRate Confidence                          Category
+#>        name        (none)    0.00          -            No identifier detected
+#>  aadhaar_no       Aadhaar    1.00       0.98                     Personal data
+#>      pan_no           PAN    1.00       0.95                     Personal data
+#>      mobile Mobile number    1.00       0.90                     Personal data
+#>      upi_id       UPI VPA    1.00       0.95                     Personal data
+#>     pincode      PIN code    1.00       0.60 Personal data (context-dependent)
+#>         dob        (none)    0.00          -            No identifier detected
+#>      gender        (none)    0.00          -            No identifier detected
+#>      salary        (none)    0.00          -            No identifier detected
+#>  RiskTier
+#>      None
+#>      High
+#>      High
+#>    Medium
+#>    Medium
+#>       Low
+#>      None
+#>      None
+#>      None
+#> Structural validity only; risk tiers are a package convention, not legal advice.
 ```
 
-The build guide specifies **R ≥ 4.2** and the above development toolchain for building the package.
+Assess re-identification risk and compute a technical score:
 
----
+``` r
+quasi <- c("pincode", "dob", "gender")
+risk <- reid_risk(df, quasi)
+risk
+#> <reid_risk>: quasi-identifiers: pincode, dob, gender
+#> 500 rows in 500 groups; minimum k = 1
+#> k = 1 for 100% of rows; k < 5 for 100% of rows
+#> Re-identification risk: HIGH
+#> Uniqueness within this data frame only; not a population-level estimate.
 
-## Testing
-
-The project uses **testthat** for automated unit testing.
-
-Run:
-
-```r
-devtools::test()
+dpdp_score(audit, risk)
+#> <dpdp_score>
+#> Overall DPDP readiness: 0 / 100 (Weak)
+#> Section 2(t) exposure: HIGH (5 flagged identifier columns)
+#>                     Section        Basis Points Status
+#>  Direct identifier exposure Section 2(t) 0 / 50   HIGH
+#>      Re-identification risk Section 2(t) 0 / 30   HIGH
+#>          Identifier breadth Section 8(5) 0 / 20   HIGH
+#> Technical assessment against a package-defined rubric; not legal advice.
 ```
 
-The tests cover:
+Anonymise and compare the risk before and after:
 
-* Valid identifier detection
-* Invalid identifier rejection
-* Boundary cases
-* PII dataframe scanning
-* Classification behaviour
-* Anonymization functions
-
-For example:
-
-```r
-test_that("PAN structural validation works", {
-  expect_true(
-    detect_pan("AAAPL1234C")$is_match
-  )
-
-  expect_false(
-    detect_pan("1234567890")$is_match
-  )
-})
+``` r
+res <- anonymize(
+  df,
+  method = c(aadhaar_no = "mask", pan_no = "hash",
+             dob = "generalize", pincode = "generalize"),
+  salt = "demo-salt-not-for-production",
+  quasi_vars = quasi,
+  reference_date = as.Date("2024-06-01")
+)
+res
+#> <pii_anonymized>: 4 columns transformed in 500 rows
+#>      column     method n_changed n_non_missing
+#>  aadhaar_no       mask       500           500
+#>      pan_no       hash       500           500
+#>         dob generalize       500           500
+#>     pincode generalize       500           500
+#> Re-identification risk (pincode, dob, gender): HIGH -> HIGH
+#> Rows with k = 1: 100% -> 92%
 ```
 
-Synthetic data is used for testing rather than real Aadhaar or PAN information.
+Create a shareable HTML audit report. It is written to a temporary
+folder unless you give `output_dir`:
 
----
-
-## Privacy & Ethical Considerations
-
-Privacy is an important part of the project itself.
-
-**Real Aadhaar, PAN, or other sensitive identifiers should never be used as test data.**
-
-The project uses synthetically generated identifiers and intentionally invalid examples for testing. Valid synthetic Aadhaar values can be generated using the same checksum logic implemented by the package.
-
-This allows the detection system to be tested without exposing real personal information.
-
----
-
-## CRAN Readiness
-
-The project is being developed with CRAN-style package standards in mind.
-
-The intended workflow includes:
-
-```r
-devtools::document()
-devtools::load_all()
-devtools::test()
-devtools::check()
-devtools::check(cran = TRUE)
+``` r
+path <- report(audit, reid = risk, score = dpdp_score(audit, risk))
+path
+#> [1] "C:/Users/Adars/AppData/Local/Temp/RtmpeUSyCJ/bharatpii-audit-77b82abb452.html"
 ```
 
-The project targets:
+## Features
 
-* Complete roxygen2 documentation
-* Unit-test coverage
-* Working vignettes
-* Clean `R CMD check`
-* DESCRIPTION and NAMESPACE files
-* MIT licensing
-* Reproducible package structure
+- Eight identifier detectors with checksum or structure checks (Verhoeff
+  for Aadhaar, base-36 for GSTIN).
+- `pii_scan()` and `classify_dpdp()` for column-level audits.
+- `reid_risk()` for k-anonymity risk, `dpdp_score()` for a 0-100 score.
+- `anonymize()`: masking, salted SHA-256 hashing and generalisation.
+- `synthetic_pii()`: checksum-valid synthetic data, so no real
+  identifiers are ever needed for testing.
+- `report()`: an HTML technical audit report (see `?report`).
 
-The proposed evaluation target is **0 errors, 0 warnings, and 0 notes** before CRAN submission.
+## Ethics
 
----
+No real Aadhaar, PAN or other identifiers are used in this package. Test
+data is generated by running the checksum algorithms in reverse.
 
-## Development Roadmap
+## Acknowledgements
 
-### Phase 1 — Detection Engine
-
-* [x] Package architecture
-* [ ] Aadhaar detector
-* [ ] PAN detector
-* [ ] GSTIN detector
-* [ ] IFSC detector
-* [ ] UPI detector
-* [ ] Mobile number detector
-* [ ] PIN code detector
-
-### Phase 2 — Privacy Analysis
-
-* [ ] DPDP classification
-* [ ] DPDP readiness scoring
-* [ ] Re-identification risk analysis
-* [ ] Risk visualization
-
-### Phase 3 — Anonymization
-
-* [ ] Masking
-* [ ] Hashing
-* [ ] Generalization
-* [ ] Before/after risk comparison
-
-### Phase 4 — Reporting & Documentation
-
-* [ ] Audit report generation
-* [ ] Getting Started vignette
-* [ ] DPDP Compliance Workflow vignette
-* [ ] Complete API documentation
-
-### Phase 5 — CRAN Preparation
-
-* [ ] Full testthat suite
-* [ ] `R CMD check`
-* [ ] `devtools::check(cran = TRUE)`
-* [ ] Documentation cleanup
-* [ ] CRAN submission preparation
-
----
-
-## Project Timeline
-
-The original project plan is structured around an approximately six-week development cycle:
-
-```text
-Week 1–2
-Design + identifier research + DPDP mapping
-
-Week 3
-Core detection + risk/anonymization modules
-
-Week 4
-Integration + S3 classes + documentation
-
-Week 5
-Testing + synthetic datasets + vignettes
-
-Week 6
-R CMD check + polishing + CRAN preparation
-```
-
-This division was designed for a two-member team working on detection and compliance components in parallel.
-
----
-
-## Scope
-
-### In Scope
-
-* Indian PII detection
-* Pattern and structural validation
-* Aadhaar checksum validation
-* DPDP-oriented classification
-* Privacy/readiness scoring
-* k-anonymity-based risk estimation
-* Data masking and anonymization
-* Audit reporting
-* R package development
-* Testing and documentation
-
-### Currently Out of Scope
-
-* Real-time API deployment
-* Web/GUI interface
-* Generic international PII detection
-* Full NLP-based named entity recognition
-* Legal certification
-* Production-scale enterprise compliance systems
-
-The scope is intentionally limited so that the core package can be completed and evaluated properly within the academic project timeline.
-
----
-
-## What Makes bharatPII Different?
-
-The main idea behind bharatPII is **not simply detecting PII**.
-
-The package connects multiple stages of the privacy workflow:
-
-```text
-Detect
-  ↓
-Validate
-  ↓
-Classify
-  ↓
-Measure Risk
-  ↓
-Anonymize
-  ↓
-Report
-```
-
-The combination of **Indian identifier validation + DPDP-oriented classification + quantitative re-identification risk + anonymization** is the central novelty of the project.
-
-
----
-
-## Academic Project
-
-**Course:** Programming for Data Science
-**Institution:** VIT Chennai
-**Project:** bharatPII — Indian PII Detection & DPDP Act 2023 Compliance Auditor
-
----
-
-## Disclaimer
-
-bharatPII is an academic and technical privacy-auditing project.
-
-Its compliance classifications and scores are intended to assist data practitioners in identifying potential privacy issues. They should **not be treated as legal advice, legal certification, or a substitute for professional compliance review**.
-
----
-
-## Future Scope
-
-Possible future extensions include:
-
-* Additional Indian identifier types
-* Improved checksum and validation algorithms
-* More sophisticated NLP-based PII detection
-* Column-level and row-level privacy visualizations
-* Advanced re-identification metrics
-* More configurable DPDP rule sets
-* Interactive Shiny interface
-* Additional report formats
-* Expanded CRAN documentation and examples
-
----
-
-## License
-
-This project is released under the **MIT License**.
-
----
-
-> **bharatPII — Bringing Indian-context privacy detection and auditing directly into the R data-science workflow.**
+This package was done alongside with Vaisnavi Sabarish at
+<https://github.com/vaisnavisabarish/bharatPII>.

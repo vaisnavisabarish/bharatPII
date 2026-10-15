@@ -1,0 +1,207 @@
+---
+title: "DPDP-Informed Privacy Auditing and Anonymisation"
+author: "bharatpii contributors"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{DPDP-Informed Privacy Auditing and Anonymisation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Purpose and scope
+
+This vignette demonstrates a technical workflow for scanning data,
+classifying potential personal-data fields, assessing a form of
+re-identification risk, computing an audit score, and applying
+anonymisation methods.
+
+All examples use synthetic data. The package's classifications and scores
+are technical conventions, not legal advice or a certification of compliance.
+
+The Digital Personal Data Protection Act, 2023 defines personal data in
+Section 2(t). The Act does not establish the commonly used category of
+"sensitive personal data" as a separate statutory category in the same
+way some other privacy frameworks do. The package's `risk_tier` labels
+should therefore be understood as package-defined technical labels.
+
+# Prepare synthetic data
+
+```{r prepare-data}
+library(bharatpii)
+
+set.seed(123)
+example_data <- synthetic_pii(n = 50)
+
+names(example_data)
+head(example_data)
+```
+
+Do not substitute real personal information into a vignette or its examples.
+
+# Scan and classify
+
+First, scan the data frame and then explicitly apply the package's
+DPDP-informed classification function.
+
+```{r scan-and-classify}
+audit <- pii_scan(example_data, threshold = 0.5)
+classified_audit <- classify_dpdp(audit)
+
+print(classified_audit)
+head(as.data.frame(classified_audit))
+```
+
+Review the classification fields and the basis recorded by the package.
+A detected field does not by itself establish that every value in that
+field is personal data, nor does a classification establish compliance.
+
+# Assess re-identification risk
+
+K-anonymity examines how many records share combinations of selected
+quasi-identifiers. It is one useful technical measure, not a guarantee
+against every re-identification attack.
+
+```{r reidentification-risk}
+risk <- reid_risk(
+  example_data,
+  quasi_vars = c("gender", "pincode")
+)
+
+print(risk)
+```
+
+Inspect the returned summary fields:
+
+```{r risk-summary}
+risk$min_k
+risk$prop_k1
+risk$prop_k_lt5
+risk$risk_level
+```
+
+The result depends on the selected quasi-identifiers and the data being
+assessed. A different selection may produce a different risk estimate.
+
+# Calculate a technical audit score
+
+The score combines the package's audit findings with optional
+re-identification results.
+
+```{r technical-score}
+score <- dpdp_score(
+  classified_audit,
+  reid = risk
+)
+
+print(score)
+score$breakdown
+```
+
+Treat the score as a prioritisation aid for reviewing data-handling risks.
+It is not a statutory score and should not be presented as proof of legal
+compliance.
+
+# Apply anonymisation methods
+
+`anonymize()` returns an object containing transformed data and a report
+of the changes. Check its documentation with `?anonymize` for the full
+argument definitions and limitations of each method.
+
+## Masking
+
+With an unnamed `"mask"` method, every column flagged by `pii_scan()` is
+masked.
+
+```{r masking}
+masked <- anonymize(
+  example_data,
+  method = "mask",
+  quasi_vars = c("gender", "pincode")
+)
+
+head(masked$data)
+masked$report
+```
+
+Masking changes values according to the method's rules. Check the output
+before sharing it, because masking alone does not guarantee anonymity.
+
+## Salted hashing
+
+```{r hashing}
+hashed <- anonymize(
+  example_data,
+  method = "hash",
+  salt = "vignette-example-salt-not-for-production"
+)
+
+head(hashed$data)
+hashed$report
+```
+
+The salt above is a demonstration value, not a production secret.
+Do not place confidential salts in source code or public repositories.
+Hashing is not the same as anonymisation: stable hashes can still permit
+linkage, and low-entropy inputs may be vulnerable to guessing.
+
+## Generalisation
+
+Generalisation reduces precision in selected data fields. For example,
+a numeric field such as salary may be generalised into wider bands.
+Generalisation needs a named method vector, because it cannot choose
+columns automatically.
+
+```{r generalisation}
+generalised <- anonymize(
+  example_data,
+  method = c(salary = "generalize"),
+  quasi_vars = c("gender", "salary"),
+  band_width = 10000
+)
+
+head(generalised$data)
+generalised$report
+generalised$risk_before
+generalised$risk_after
+```
+
+Choose generalisation widths based on the use case and the required
+balance between analytical utility and disclosure risk. Always inspect
+the transformed data to confirm that the output is appropriate.
+
+# Compare risk summaries
+
+Where risk summaries are available, compare the before-and-after
+results returned by the anonymisation workflow.
+
+```{r risk-comparison}
+masked$risk_before
+masked$risk_after
+```
+
+A lower measured risk under one metric does not prove that the output
+is anonymous under all reasonable attack scenarios.
+
+# Practical review checklist
+
+Before using transformed data outside its original environment:
+
+1. Confirm that the data contains no unintended direct identifiers.
+2. Review quasi-identifiers and combinations that could enable linkage.
+3. Inspect the anonymisation report and transformed values.
+4. Reassess risk against the intended recipient, context, and release.
+5. Apply appropriate access controls and organisational safeguards.
+6. Seek qualified legal review where a legal compliance determination is required.
+
+`bharatpii` supports technical privacy auditing. Responsibility for the
+data, release decision, and legal assessment remains with the organisation
+using it.

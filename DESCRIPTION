@@ -9,6 +9,8 @@ Authors@R: c(
            email = "vaisnavisabarish2@gmail.com",
            role = "aut")
   )
+Author: Adarsh S P L [aut, cre], Vaisnavi Sabarish [aut]
+Maintainer: Adarsh S P L <adarshds1224@gmail.com>
 Description: Detects and structurally validates Indian personal
     identifiers in data frames, including Aadhaar (Verhoeff checksum), PAN,
     GSTIN, IFSC, UPI virtual payment addresses, mobile numbers, postal PIN
@@ -18,8 +20,8 @@ Description: Detects and structurally validates Indian personal
     Personal Data Protection (DPDP) Act, 2023. Validity checks do not
     prove that an identifier was ever issued.
 License: MIT + file LICENSE
-URL: https://github.com/adarshds1224-pixel/BharatPII
-BugReports: https://github.com/adarshds1224-pixel/BharatPII/issues
+URL: https://github.com/vaisnavisabarish/bharatPII
+BugReports: https://github.com/vaisnavisabarish/bharatPII/issues
 Depends:
     R (>= 4.1.0)
 Imports:
